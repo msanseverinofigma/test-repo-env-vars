@@ -2,142 +2,58 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-const initialConfig = {
-  appName: 'Test Repo Env Vars',
-  welcomeMessage: 'Loading environment-backed configuration...'
-};
-
 function App() {
-  const [config, setConfig] = useState(initialConfig);
-  const [health, setHealth] = useState({ state: 'loading', message: 'Checking backend...' });
-  const [apiResult, setApiResult] = useState(null);
-  const [experimentResult, setExperimentResult] = useState(null);
+  const [count, setCount] = useState(0);
+  const [route, setRoute] = useState(window.location.pathname);
 
   useEffect(() => {
-    refreshConfig();
-    checkHealth();
+    const handlePopState = () => setRoute(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  async function requestJson(path, options = {}) {
-    const response = await fetch(path, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      },
-      ...options
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      const message = data?.error?.message || `Request failed with ${response.status}`;
-      const error = new Error(message);
-      error.payload = data;
-      throw error;
-    }
-    return data;
-  }
-
-  async function refreshConfig() {
-    try {
-      const data = await requestJson('/api/config');
-      setConfig(data);
-    } catch (error) {
-      setConfig({
-        appName: initialConfig.appName,
-        welcomeMessage: 'Could not load backend configuration.'
-      });
-    }
-  }
-
-  async function checkHealth() {
-    setHealth({ state: 'loading', message: 'Checking backend...' });
-    try {
-      const data = await requestJson('/api/health');
-      setHealth({
-        state: 'ok',
-        message: `${data.service} is ${data.status}`,
-        detail: `Updated ${new Date(data.timestamp).toLocaleTimeString()}`
-      });
-    } catch (error) {
-      setHealth({
-        state: 'error',
-        message: 'Backend is unavailable',
-        detail: error.message
-      });
-    }
-  }
-
-  async function callPing() {
-    setApiResult({ state: 'loading', message: 'Calling /api/ping...' });
-    try {
-      const data = await requestJson('/api/ping', {
-        method: 'POST',
-        body: JSON.stringify({ source: 'browser-button' })
-      });
-      setApiResult({ state: 'ok', message: data.message });
-    } catch (error) {
-      setApiResult({ state: 'error', message: error.message });
-    }
-  }
-
-  async function callExperiment() {
-    setExperimentResult({ state: 'loading', message: 'Checking EXPERIMENT_TOKEN...' });
-    try {
-      const data = await requestJson('/api/experiment', { method: 'POST' });
-      setExperimentResult({
-        state: 'ok',
-        message: data.message
-      });
-    } catch (error) {
-      setExperimentResult({
-        state: 'error',
-        message: error.message,
-        variable: error.payload?.error?.variable
-      });
-    }
+  function navigate(event, path) {
+    event.preventDefault();
+    window.history.pushState({}, '', path);
+    setRoute(path);
   }
 
   return (
-    <main className="app-shell">
-      <section className="intro">
-        <p className="eyebrow">Environment variable demo</p>
-        <h1>{config.appName}</h1>
-        <p className="welcome">{config.welcomeMessage}</p>
-      </section>
-
-      <section className="status-panel" aria-label="Backend status">
-        <div>
-          <p className="section-label">Backend health</p>
-          <h2 className={health.state === 'error' ? 'danger-text' : ''}>{health.message}</h2>
-          {health.detail ? <p className="muted">{health.detail}</p> : null}
+    <main className="fixture-shell">
+      <section className="fixture-card">
+        <div className="status-row">
+          <span className="status-dot" aria-hidden="true" />
+          <span>Cached template fixture</span>
         </div>
-        <span className={`status-dot ${health.state}`} aria-label={`Health status: ${health.state}`} />
-      </section>
 
-      <section className="controls" aria-label="API controls">
-        <button type="button" onClick={checkHealth}>Refresh Health</button>
-        <button type="button" onClick={callPing}>Test Ping</button>
-        <button type="button" className="primary" onClick={callExperiment}>Run Experiment</button>
-      </section>
+        <p className="eyebrow">Interactive preview</p>
+        <h1>Template Preview E2E A</h1>
+        <p className="lede">
+          A deterministic frontend-only surface for validating cached template previews.
+        </p>
 
-      <section className="results" aria-label="API results">
-        <ResultCard title="Ping endpoint" result={apiResult} empty="Click Test Ping to call a normal API route." />
-        <ResultCard
-          title="Experiment endpoint"
-          result={experimentResult}
-          empty="Click Run Experiment to test EXPERIMENT_TOKEN."
-        />
+        <div className="interactive-grid">
+          <section className="panel" aria-labelledby="counter-title">
+            <p className="panel-label" id="counter-title">State check</p>
+            <button type="button" className="count-button" onClick={() => setCount((value) => value + 1)}>
+              Count: {count}
+            </button>
+            <p className="hint">Click to confirm client state updates visibly.</p>
+          </section>
+
+          <section className="panel" aria-labelledby="route-title">
+            <p className="panel-label" id="route-title">Route check</p>
+            <p className="current-route" aria-live="polite">
+              Current route <code>{route}</code>
+            </p>
+            <nav aria-label="Fixture routes">
+              <a href="/demo" onClick={(event) => navigate(event, '/demo')}>/demo</a>
+              <a href="/other" onClick={(event) => navigate(event, '/other')}>/other</a>
+            </nav>
+          </section>
+        </div>
       </section>
     </main>
-  );
-}
-
-function ResultCard({ title, result, empty }) {
-  return (
-    <article className={`result-card ${result?.state || 'idle'}`}>
-      <p className="section-label">{title}</p>
-      <p className="result-message">{result?.message || empty}</p>
-      {result?.variable ? <p className="missing-var">Missing variable: {result.variable}</p> : null}
-    </article>
   );
 }
 

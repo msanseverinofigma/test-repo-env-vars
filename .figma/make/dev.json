@@ -1,4 +1,4 @@
 {
   "installOn": ["package.json", "package-lock.json"],
-  "restartOn": ["vite.config.js", "scripts/dev.mjs", "backend/**"]
+  "restartOn": ["vite.config.js"]
 }

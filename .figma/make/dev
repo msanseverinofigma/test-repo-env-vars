@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export FRONTEND_HOST="0.0.0.0"
-export FRONTEND_PORT="$PORT"
-export PATH="$PWD/node_modules/.bin:$PATH"
-exec node scripts/dev.mjs
+exec ./node_modules/.bin/vite --host 0.0.0.0 --port "$PORT"

@@ -2,19 +2,14 @@
   "name": "test-repo-env-vars",
   "version": "0.1.0",
   "private": true,
-  "description": "A small React + Vite and Node.js app for demonstrating environment variables safely.",
+  "description": "A disposable React and Vite fixture for cached-template end-to-end testing.",
   "type": "module",
   "scripts": {
-    "setup": "node scripts/setup-env.mjs",
-    "dev": "node scripts/dev.mjs",
-    "dev:frontend": "vite",
-    "dev:backend": "node --env-file-if-exists=.env backend/server.js",
+    "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "node --test tests/*.test.js"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
